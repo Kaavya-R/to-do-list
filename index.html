@@ -1,0 +1,162 @@
+<html>
+<head>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f06, #4a90e2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #fff;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        input[type="text"] {
+            width: calc(100% - 100px);
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            margin-right: 1rem;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        button {
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            border: none;
+            background: #ff6b6b;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #ff4757;
+        }
+        .todo {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, background 0.3s;
+        }
+        .todo:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .task {
+            flex: 1;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .delete,
+        .edit {
+            cursor: pointer;
+            transition: transform 0.2s, color 0.3s;
+        }
+        .delete:hover {
+            transform: scale(1.1);
+            color: #ff4757;
+        }
+        .edit:hover {
+            transform: scale(1.1);
+            color: #1e90ff;
+        }
+        svg {
+            fill: currentColor;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <input type="text" placeholder="Add a new task...">
+        <button>Add</button>
+        <div id="task-list"></div>
+    </div>
+    <script>
+        let inputs = document.querySelector('input');
+        let btn = document.querySelector('button');
+        let taskList = document.getElementById('task-list');
+        let task = [];
+        let localstoragedata = localStorage.getItem("task array");
+        if (localstoragedata != null) {
+            let ogdata = JSON.parse(localstoragedata);
+            task = ogdata;
+            maketodo();
+        }
+        btn.addEventListener("click", function () {
+            let query = inputs.value;
+            inputs.value = "";
+            if (query.trim() === "") {
+                alert("no value entered");
+                throw new Error("empty input field error");
+            }
+            let taskObj = {
+                id: Date.now(),
+                text: query
+            }
+            task.push(taskObj);
+            localStorage.setItem("task array", JSON.stringify(task));
+            maketodo();
+        });
+        function maketodo() {
+            taskList.innerHTML = "";
+            for (let i = 0; i < task.length; i++) {
+                let { id, text } = task[i];
+                let element = document.createElement('div');
+                element.innerHTML = `
+                    <span class="task" contenteditable="false">${text}</span>
+                    <button class='edit'>Edit</button>
+                    <span class="delete"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path d="M17 6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6ZM18 8H6V20H18V8ZM13.4142 13.9997L15.182 15.7675L13.7678 17.1817L12 15.4139L10.2322 17.1817L8.81802 15.7675L10.5858 13.9997L8.81802 12.232L10.2322 10.8178L12 12.5855L13.7678 10.8178L15.182 12.232L13.4142 13.9997ZM9 4V6H15V4H9Z"></path></svg></span>
+                `;
+                let delbtn = element.querySelector('.delete');
+                let editbtn = element.querySelector('.edit');
+                let taskText = element.querySelector('.task');
+                delbtn.addEventListener("click", function () {
+                    let filteredarray = task.filter(function (taskobj) {
+                        return taskobj.id != id;
+                    });
+                    task = filteredarray;
+                    localStorage.setItem("task array", JSON.stringify(task));
+                    taskList.removeChild(element);
+                });
+                editbtn.addEventListener("click", function () {
+                    if (editbtn.innerText === 'Edit') {
+                        taskText.setAttribute('contenteditable', 'true'); // Enable editing
+                        taskText.focus(); // Focus on the text to start editing
+                        editbtn.innerText = 'Save'; // Change button text to 'Save'
+                    } else {
+                        taskText.setAttribute('contenteditable', 'false'); // Disable editing
+                        let updatedText = taskText.innerText.trim();
+                        if (updatedText !== "") {
+                            task = task.map(function (taskobj) {
+                                if (taskobj.id === id) {
+                                    taskobj.text = updatedText;
+                                }
+                                return taskobj;
+                            });
+                            localStorage.setItem("task array", JSON.stringify(task));
+                        }
+                        editbtn.innerText = 'Edit'; // Change button text back to 'Edit'
+                    }
+                });
+                element.classList.add('todo');
+                taskList.appendChild(element);
+            }
+        }
+    </script>
+</body>
+</html>
